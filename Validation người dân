@@ -1,0 +1,81 @@
+function validateCitizenSubmission_(data) {
+
+  if (!data) {
+    throw new Error(
+      'Không có dữ liệu gửi lên.'
+    );
+  }
+
+
+  if (
+    !data.SOURCE_TYPE
+  ) {
+
+    throw new Error(
+      'Vui lòng chọn loại thông tin.'
+    );
+
+  }
+
+
+  if (
+    !data.DESCRIPTION ||
+    data.DESCRIPTION.trim().length < 10
+  ) {
+
+    throw new Error(
+      'Nội dung thông tin phải có ít nhất 10 ký tự.'
+    );
+
+  }
+
+
+  if (
+    data.DESCRIPTION.length > 10000
+  ) {
+
+    throw new Error(
+      'Nội dung vượt quá giới hạn cho phép.'
+    );
+
+  }
+
+
+  if (
+    data.CITIZEN_PHONE &&
+    !/^[0-9+().\-\s]{7,20}$/
+      .test(data.CITIZEN_PHONE)
+  ) {
+
+    throw new Error(
+      'Số điện thoại không hợp lệ.'
+    );
+
+  }
+
+
+  if (
+    data.CITIZEN_EMAIL &&
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      .test(data.CITIZEN_EMAIL)
+  ) {
+
+    throw new Error(
+      'Email không hợp lệ.'
+    );
+
+  }
+
+
+  if (
+    data.ATTACHMENTS &&
+    data.ATTACHMENTS.length > 10
+  ) {
+
+    throw new Error(
+      'Mỗi hồ sơ chỉ được gửi tối đa 10 tệp.'
+    );
+
+  }
+
+}
