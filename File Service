@@ -1,0 +1,137 @@
+function saveReportFile_(
+  reportId,
+  caseCode,
+  file,
+  securityLevel
+) {
+
+  if (!file) {
+    return null;
+  }
+
+
+  const MAX_SIZE =
+    50 * 1024 * 1024;
+
+
+  if (
+    Number(file.size) > MAX_SIZE
+  ) {
+
+    throw new Error(
+      'Tệp ' +
+      file.name +
+      ' vượt quá 50 MB.'
+    );
+
+  }
+
+
+  const rootFolder =
+    getOrCreateRootFolder_();
+
+
+  const year =
+    new Date()
+      .getFullYear()
+      .toString();
+
+
+  const yearFolder =
+    getOrCreateFolder_(
+      rootFolder,
+      year
+    );
+
+
+  const caseFolder =
+    getOrCreateFolder_(
+      yearFolder,
+      caseCode
+    );
+
+
+  const blob =
+    Utilities.newBlob(
+      Utilities.base64Decode(
+        file.base64
+      ),
+      file.mimeType,
+      sanitizeFileName_(
+        file.name
+      )
+    );
+
+
+  const driveFile =
+    caseFolder.createFile(
+      blob
+    );
+
+
+  const attachmentId =
+    generateId_(
+      'ATT'
+    );
+
+
+  dbCreate(
+    '05_REPORT_ATTACHMENTS',
+    {
+
+      ATTACHMENT_ID:
+        attachmentId,
+
+      REPORT_ID:
+        reportId,
+
+      FILE_ID:
+        driveFile.getId(),
+
+      FILE_NAME:
+        driveFile.getName(),
+
+      MIME_TYPE:
+        file.mimeType,
+
+      FILE_SIZE:
+        file.size,
+
+      DRIVE_FOLDER_ID:
+        caseFolder.getId(),
+
+      SHA256:
+        sha256_(blob.getBytes()),
+
+      UPLOADED_AT:
+        now_(),
+
+      UPLOADED_BY:
+        'PUBLIC',
+
+      SECURITY_LEVEL:
+        securityLevel || 'INTERNAL',
+
+      DESCRIPTION:
+        '',
+
+      IS_ACTIVE:
+        true
+
+    },
+
+    'PUBLIC'
+  );
+
+
+  return {
+
+    ATTACHMENT_ID:
+      attachmentId,
+
+    FILE_ID:
+      driveFile.getId()
+
+  };
+
+}
