@@ -1,0 +1,105 @@
+function getOrCreateRootFolder_() {
+
+  const props =
+    PropertiesService
+      .getScriptProperties();
+
+
+  const folderId =
+    props.getProperty(
+      'UPLOAD_ROOT_FOLDER_ID'
+    );
+
+
+  if (folderId) {
+
+    try {
+
+      return DriveApp
+        .getFolderById(
+          folderId
+        );
+
+    }
+    catch(error) {}
+
+  }
+
+
+  const folder =
+    DriveApp.createFolder(
+      'HOM_THU_TO_GIAC_DUC_HOP'
+    );
+
+
+  props.setProperty(
+    'UPLOAD_ROOT_FOLDER_ID',
+    folder.getId()
+  );
+
+
+  return folder;
+
+}
+
+
+function getOrCreateFolder_(
+  parent,
+  name
+) {
+
+  const folders =
+    parent.getFoldersByName(
+      name
+    );
+
+
+  if (folders.hasNext()) {
+
+    return folders.next();
+
+  }
+
+
+  return parent.createFolder(
+    name
+  );
+
+}
+
+
+function sanitizeFileName_(name) {
+
+  return String(name)
+    .replace(/[\\/:*?"<>|]/g, '_')
+    .substring(0, 150);
+
+}
+
+
+function sha256_(bytes) {
+
+  const digest =
+    Utilities.computeDigest(
+      Utilities.DigestAlgorithm.SHA_256,
+      bytes
+    );
+
+
+  return digest
+    .map(function(byte) {
+
+      const v =
+        (byte < 0
+          ? byte + 256
+          : byte)
+          .toString(16);
+
+      return v.length === 1
+        ? '0' + v
+        : v;
+
+    })
+    .join('');
+
+}
