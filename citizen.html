@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <base target="_top">
+
+  <?!= include('css'); ?>
+
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="header">
+
+    <div class="badge">🛡️</div>
+
+    <h1>
+      HÒM THƯ TỐ GIÁC TỘI PHẠM
+      & PHẢN ÁNH ANTT
+    </h1>
+
+    <p>
+      CÔNG AN XÃ ĐỨC HỢP
+    </p>
+
+  </div>
+
+
+  <div class="notice">
+
+    Hệ thống tiếp nhận thông tin tố giác,
+    phản ánh về an ninh, trật tự.
+
+    <br><br>
+
+    Người cung cấp có thể yêu cầu giữ bí mật
+    thông tin cá nhân.
+
+  </div>
+
+
+  <form id="reportForm">
+
+    <label>Loại thông tin *</label>
+
+    <select id="sourceType" required>
+
+      <option value="">
+        -- Chọn loại thông tin --
+      </option>
+
+      <option value="CRIME_REPORT">
+        Tố giác về tội phạm
+      </option>
+
+      <option value="CRIME_INFORMATION">
+        Thông tin về vụ việc có dấu hiệu tội phạm
+      </option>
+
+      <option value="ANTT_REFLECTION">
+        Phản ánh về ANTT
+      </option>
+
+      <option value="TRAFFIC_REFLECTION">
+        Phản ánh TTATGT
+      </option>
+
+      <option value="FIRE_SAFETY_REFLECTION">
+        Phản ánh PCCC
+      </option>
+
+      <option value="OTHER">
+        Nội dung khác
+      </option>
+
+    </select>
+
+
+    <label>Họ và tên</label>
+
+    <input
+      type="text"
+      id="citizenName"
+      maxlength="150"
+    >
+
+
+    <label>Số điện thoại</label>
+
+    <input
+      type="tel"
+      id="citizenPhone"
+      maxlength="20"
+    >
+
+
+    <label>Email</label>
+
+    <input
+      type="email"
+      id="citizenEmail"
+      maxlength="150"
+    >
+
+
+    <label>Địa chỉ</label>
+
+    <input
+      type="text"
+      id="citizenAddress"
+      maxlength="300"
+    >
+
+
+    <label class="checkbox">
+
+      <input
+        type="checkbox"
+        id="confidentiality"
+      >
+
+      Tôi đề nghị giữ bí mật thông tin cá nhân
+
+    </label>
+
+
+    <label>Ngày xảy ra</label>
+
+    <input
+      type="date"
+      id="incidentDate"
+    >
+
+
+    <label>Thời gian</label>
+
+    <input
+      type="time"
+      id="incidentTime"
+    >
+
+
+    <label>Địa điểm xảy ra</label>
+
+    <input
+      type="text"
+      id="incidentLocation"
+      maxlength="300"
+    >
+
+
+    <label>Nội dung thông tin *</label>
+
+    <textarea
+      id="description"
+      rows="8"
+      maxlength="10000"
+      required
+      placeholder="Mô tả sự việc, người liên quan, địa điểm, thời gian và các thông tin khác mà anh/chị biết..."
+    ></textarea>
+
+
+    <label>Tài liệu, hình ảnh, video</label>
+
+    <input
+      type="file"
+      id="attachments"
+      multiple
+      accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx"
+    >
+
+    <small>
+      Chỉ gửi tài liệu liên quan đến nội dung cung cấp.
+    </small>
+
+
+    <button
+      type="submit"
+      id="submitBtn"
+      class="btn-primary"
+    >
+      GỬI THÔNG TIN
+    </button>
+
+  </form>
+
+
+  <div
+    id="result"
+    class="result hidden"
+  ></div>
+
+</div>
+
+
+<script>
+
+document
+  .getElementById('reportForm')
+  .addEventListener(
+    'submit',
+    submitReport
+  );
+
+
+async function submitReport(e) {
+
+  e.preventDefault();
+
+  const button =
+    document.getElementById(
+      'submitBtn'
+    );
+
+  button.disabled = true;
+
+  button.innerText =
+    'Đang tiếp nhận...';
+
+
+  try {
+
+    const files =
+      await readFiles();
+
+
+    const data = {
+
+      SOURCE_TYPE:
+        document.getElementById(
+          'sourceType'
+        ).value,
+
+      CITIZEN_NAME:
+        document.getElementById(
+          'citizenName'
+        ).value.trim(),
+
+      CITIZEN_PHONE:
+        document.getElementById(
+          'citizenPhone'
+        ).value.trim(),
+
+      CITIZEN_EMAIL:
+        document.getElementById(
+          'citizenEmail'
+        ).value.trim(),
+
+      CITIZEN_ADDRESS:
+        document.getElementById(
+          'citizenAddress'
+        ).value.trim(),
+
+      CONFIDENTIALITY_REQUEST:
+        document.getElementById(
+          'confidentiality'
+        ).checked,
+
+      INCIDENT_DATE:
+        document.getElementById(
+          'incidentDate'
+        ).value,
+
+      INCIDENT_TIME:
+        document.getElementById(
+          'incidentTime'
+        ).value,
+
+      INCIDENT_LOCATION:
+        document.getElementById(
+          'incidentLocation'
+        ).value.trim(),
+
+      DESCRIPTION:
+        document.getElementById(
+          'description'
+        ).value.trim(),
+
+      ATTACHMENTS:
+        files
+
+    };
+
+
+    google.script.run
+
+      .withSuccessHandler(
+        showSuccess
+      )
+
+      .withFailureHandler(
+        showError
+      )
+
+      .submitCitizenReport(
+        data
+      );
+
+  }
+  catch(error) {
+
+    showError(error);
+
+  }
+
+}
+
+
+function readFiles() {
+
+  const input =
+    document.getElementById(
+      'attachments'
+    );
+
+  const files =
+    Array.from(
+      input.files
+    );
+
+
+  return Promise.all(
+
+    files.map(function(file) {
+
+      return new Promise(
+        function(resolve, reject) {
+
+          const reader =
+            new FileReader();
+
+          reader.onload =
+            function(e) {
+
+              resolve({
+
+                name:
+                  file.name,
+
+                mimeType:
+                  file.type,
+
+                size:
+                  file.size,
+
+                base64:
+                  e.target.result
+                    .split(',')[1]
+
+              });
+
+            };
+
+
+          reader.onerror =
+            reject;
+
+          reader.readAsDataURL(file);
+
+        }
+      );
+
+    })
+
+  );
+
+}
+
+
+function showSuccess(result) {
+
+  document
+    .getElementById(
+      'reportForm'
+    )
+    .classList.add(
+      'hidden'
+    );
+
+
+  const box =
+    document.getElementById(
+      'result'
+    );
+
+  box.classList.remove(
+    'hidden'
+  );
+
+
+  box.innerHTML = `
+
+    <h2>✓ ĐÃ TIẾP NHẬN</h2>
+
+    <p>
+      Thông tin của anh/chị đã được
+      ghi nhận trên hệ thống.
+    </p>
+
+    <div class="case-code">
+
+      ${escapeHtml(
+        result.CASE_CODE
+      )}
+
+    </div>
+
+    <p>
+      Vui lòng lưu lại mã trên để
+      tra cứu thông tin tiếp nhận.
+    </p>
+
+    <button
+      onclick="location.href='?page=tracking'"
+      class="btn-primary"
+    >
+      TRA CỨU
+    </button>
+
+  `;
+
+}
+
+
+function showError(error) {
+
+  alert(
+    error.message ||
+    'Không thể gửi thông tin.'
+  );
+
+
+  const button =
+    document.getElementById(
+      'submitBtn'
+    );
+
+  button.disabled = false;
+
+  button.innerText =
+    'GỬI THÔNG TIN';
+
+}
+
+
+function escapeHtml(value) {
+
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+
+}
+
+</script>
+
+</body>
+</html>
